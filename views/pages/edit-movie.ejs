@@ -1,0 +1,210 @@
+<%- include('../partials/header.ejs') %>
+
+    <!-- Page Hero -->
+    <section class="page-hero" aria-labelledby="edit-heading">
+        <div class="page-hero-badge">Editing</div>
+        <h1 id="edit-heading">
+            Edit <span class="gradient-text">
+                <%= data.title || 'Movie' %>
+            </span>
+        </h1>
+        <p>Update the details below. Changes are saved instantly via AJAX.</p>
+    </section>
+
+    <!-- Edit Movie Form -->
+    <div class="form-wrapper">
+        <form class="form-glass" id="edit-movie-form" enctype="multipart/form-data" novalidate>
+            <!-- Current Poster Preview -->
+            <% if (data.image) { %>
+                <div class="form-group">
+                    <label class="form-label">Current Poster</label>
+                    <div class="upload-preview active" id="current-poster">
+                        <img src="/<%= data.image %>" alt="Current poster for <%= data.title %>"
+                            id="current-poster-img">
+                    </div>
+                </div>
+                <% } %>
+
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label class="form-label" for="edit-title">Movie Title</label>
+                        <input type="text" class="form-control" id="edit-title" name="title"
+                            value="<%= data.title || '' %>" placeholder="e.g. Blade Runner 2099" required
+                            autocomplete="off">
+                    </div>
+
+                    <!-- Genre -->
+                    <div class="form-group">
+                        <label class="form-label" for="edit-genre">Genre</label>
+                        <select class="form-control" id="edit-genre" name="genre" required>
+                            <option value="" disabled>Select a genre</option>
+                            <% const
+                                genres=['Action','Adventure','Animation','Comedy','Crime','Documentary','Drama','Fantasy','Horror','Mystery','Romance','Sci-Fi','Thriller','Western'];
+                                %>
+                                <% genres.forEach(g=> { %>
+                                    <option value="<%= g %>" <%=data.genre===g ? 'selected' : '' %>><%= g %>
+                                    </option>
+                                    <% }); %>
+                        </select>
+                    </div>
+
+                    <!-- About -->
+                    <div class="form-group">
+                        <label class="form-label" for="edit-about">Synopsis</label>
+                        <textarea class="form-control" id="edit-about" name="about"
+                            placeholder="A brief synopsis of the movie..." rows="3"><%= data.about || '' %></textarea>
+                    </div>
+
+                    <!-- Rating -->
+                    <div class="form-group">
+                        <label class="form-label">Rating</label>
+                        <div class="star-rating-input" id="star-rating">
+                            <% for(let i=5; i>= 1; i--) { %>
+                                <input type="radio" name="rating" value="<%= i %>" id="edit-star<%= i %>"
+                                    <%=String(data.rating)===String(i) ? 'checked' : '' %>>
+                                <label for="edit-star<%= i %>" title="<%= i %> star<%= i > 1 ? 's' : '' %>">★</label>
+                                <% } %>
+                        </div>
+                    </div>
+
+                    <!-- New Image Upload -->
+                    <div class="form-group">
+                        <label class="form-label">Update Poster <span
+                                style="color: var(--text-muted); text-transform: none; letter-spacing: 0;">(optional)</span></label>
+                        <div class="upload-zone" id="upload-zone">
+                            <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <p class="upload-zone-text"><strong>Click to upload</strong> a new poster<br>Leave empty to
+                                keep the current one</p>
+                            <input type="file" name="image" id="edit-image" accept="image/*">
+                        </div>
+                        <div class="upload-preview" id="upload-preview">
+                            <img id="preview-img" src="" alt="New image preview">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="/movies/view-movies" class="btn btn-ghost btn-lg" style="flex: 1;"
+                            id="edit-cancel-btn">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg" style="flex: 2;" id="edit-submit-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('edit-movie-form');
+            const fileInput = document.getElementById('edit-image');
+            const uploadZone = document.getElementById('upload-zone');
+            const uploadPreview = document.getElementById('upload-preview');
+            const previewImg = document.getElementById('preview-img');
+            const submitBtn = document.getElementById('edit-submit-btn');
+
+            const movieId = '<%= data._id %>';
+
+            // File preview
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        previewImg.src = e.target.result;
+                        uploadPreview.classList.add('active');
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Upload zone drag
+            ['dragenter', 'dragover'].forEach(event => {
+                uploadZone.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('drag-active');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(event => {
+                uploadZone.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('drag-active');
+                });
+            });
+
+            uploadZone.addEventListener('drop', function (e) {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // AJAX form submit
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const title = document.getElementById('edit-title').value.trim();
+                if (!title) {
+                    showToast('error', 'Validation Error', 'Please enter a movie title.');
+                    document.getElementById('edit-title').focus();
+                    return;
+                }
+
+                submitBtn.innerHTML = '<div class="spinner"></div> Saving...';
+                submitBtn.disabled = true;
+
+                const formData = new FormData(form);
+
+                try {
+                    const res = await fetch(`/movies/update-movies/${movieId}`, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' },
+                        body: formData
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast('success', 'Updated!', `"${data.movie.title}" has been updated successfully.`);
+
+                        // Update poster preview if a new image was uploaded
+                        if (data.movie.image) {
+                            const currentPosterImg = document.getElementById('current-poster-img');
+                            if (currentPosterImg) {
+                                currentPosterImg.src = '/' + data.movie.image;
+                            }
+                        }
+
+                        setTimeout(() => {
+                            window.location.href = '/movies/view-movies';
+                        }, 1200);
+                    } else {
+                        showToast('error', 'Error', data.message || 'Failed to update movie.');
+                    }
+                } catch (err) {
+                    showToast('error', 'Network Error', 'Could not connect to the server.');
+                }
+
+                submitBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Changes
+        `;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+
+    <%- include('../partials/footer.ejs') %>

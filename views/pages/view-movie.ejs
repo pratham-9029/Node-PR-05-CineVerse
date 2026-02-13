@@ -1,0 +1,263 @@
+<%- include('../partials/header.ejs') %>
+
+    <!-- Page Hero -->
+    <section class="page-hero" aria-labelledby="browse-heading">
+        <div class="page-hero-badge">Collection</div>
+        <h1 id="browse-heading">
+            Browse <span class="gradient-text">Movies</span>
+        </h1>
+        <p>Your complete film collection. Drag cards to reorder, or use search to find exactly what you need.</p>
+    </section>
+
+    <!-- Stats Bar -->
+    <% const genres=[...new Set(movies.map(m=> m.genre).filter(Boolean))];
+        const ratings = movies.map(m => parseFloat(m.rating)).filter(r => !isNaN(r));
+        const avgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : '—';
+        %>
+        <div class="stats-bar" id="stats-bar" aria-label="Collection statistics">
+            <div class="stat-chip">
+                <div class="stat-chip-icon cyan" aria-hidden="true">🎬</div>
+                <div>
+                    <div class="stat-chip-value" id="movie-count">
+                        <%= movies.length %>
+                    </div>
+                    <div class="stat-chip-label">Total Movies</div>
+                </div>
+            </div>
+            <div class="stat-chip">
+                <div class="stat-chip-icon violet" aria-hidden="true">🏷️</div>
+                <div>
+                    <div class="stat-chip-value" id="genre-count">
+                        <%= genres.length %>
+                    </div>
+                    <div class="stat-chip-label">Genres</div>
+                </div>
+            </div>
+            <div class="stat-chip">
+                <div class="stat-chip-icon amber" aria-hidden="true">⭐</div>
+                <div>
+                    <div class="stat-chip-value" id="avg-rating">
+                        <%= avgRating %>
+                    </div>
+                    <div class="stat-chip-label">Avg Rating</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar: Search + Filters -->
+        <div class="toolbar" role="search" aria-label="Search and filter movies">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="search-input" placeholder="Search by title, genre..." aria-label="Search movies">
+            </div>
+            <div id="genre-filters" style="display:flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="filter-chip active" data-genre="all" id="filter-all">All</button>
+                <% genres.sort().forEach(genre=> { %>
+                    <button class="filter-chip" data-genre="<%= genre %>"
+                        id="filter-<%= genre.toLowerCase().replace(/\s+/g, '-') %>">
+                        <%= genre %>
+                    </button>
+                    <% }); %>
+            </div>
+        </div>
+
+        <!-- Movies Grid (rendered server-side via EJS) -->
+        <% if (movies.length===0) { %>
+            <div class="movies-grid" aria-label="Movie collection">
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-state-icon">🎬</div>
+                    <h3>No movies found</h3>
+                    <p>Your collection is empty. Start by adding your first movie.</p>
+                    <a href="/movies/add-movies" class="btn btn-primary btn-lg" id="empty-add-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 12h8" />
+                            <path d="M12 8v8" />
+                        </svg>
+                        Add First Movie
+                    </a>
+                </div>
+            </div>
+            <% } else { %>
+                <div class="movies-grid" id="movies-grid" aria-label="Movie collection" role="list">
+                    <% movies.forEach((movie, index)=> { %>
+                        <div class="movie-card" data-movie-id="<%= movie._id %>" data-genre="<%= movie.genre || '' %>"
+                            data-title="<%= movie.title || '' %>" data-about="<%= movie.about || '' %>" draggable="true"
+                            role="listitem" style="animation-delay: <%= index * 0.08 %>s;"
+                            aria-label="Movie: <%= movie.title || 'Untitled' %>">
+                            <div class="movie-card-drag-handle" title="Drag to reorder" aria-label="Drag handle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="9" cy="6" r="1.5" />
+                                    <circle cx="15" cy="6" r="1.5" />
+                                    <circle cx="9" cy="12" r="1.5" />
+                                    <circle cx="15" cy="12" r="1.5" />
+                                    <circle cx="9" cy="18" r="1.5" />
+                                    <circle cx="15" cy="18" r="1.5" />
+                                </svg>
+                            </div>
+                            <div class="movie-card-image">
+                                <img src="/<%= movie.image %>" alt="<%= movie.title || 'Movie poster' %>" loading="lazy"
+                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%230c0c1d%22 width=%22400%22 height=%22300%22/><text fill=%22%23555%22 font-family=%22sans-serif%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>No Image</text></svg>'">
+                                <% if (movie.rating) { %>
+                                    <div class="movie-card-badge">⭐ <%= movie.rating %>/5</div>
+                                    <% } %>
+                            </div>
+                            <div class="movie-card-body">
+                                <% if (movie.genre) { %>
+                                    <span class="movie-card-genre">
+                                        <%= movie.genre %>
+                                    </span>
+                                    <% } %>
+                                        <h3 class="movie-card-title">
+                                            <%= movie.title || 'Untitled' %>
+                                        </h3>
+                                        <% if (movie.about) { %>
+                                            <p class="movie-card-about">
+                                                <%= movie.about %>
+                                            </p>
+                                            <% } %>
+                                                <div class="movie-card-actions">
+                                                    <a href="/movies/edit-movie/<%= movie._id %>"
+                                                        class="btn btn-edit btn-sm" id="edit-<%= movie._id %>">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                            <path
+                                                                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        </svg>
+                                                        Edit
+                                                    </a>
+                                                    <button class="btn btn-delete btn-sm"
+                                                        onclick="openDeleteModal('<%= movie._id %>')"
+                                                        id="delete-<%= movie._id %>"
+                                                        aria-label="Delete <%= movie.title || 'movie' %>">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <polyline points="3 6 5 6 21 6" />
+                                                            <path
+                                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                        </svg>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+                <% } %>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const grid = document.getElementById('movies-grid');
+                            if (!grid) return;
+
+                            const searchInput = document.getElementById('search-input');
+                            const genreFiltersContainer = document.getElementById('genre-filters');
+                            const allCards = [...grid.querySelectorAll('.movie-card')];
+
+                            // ─── Client-side Search & Filter ───
+                            let activeGenre = 'all';
+
+                            function filterCards() {
+                                const search = searchInput.value.toLowerCase().trim();
+
+                                allCards.forEach(card => {
+                                    const title = (card.dataset.title || '').toLowerCase();
+                                    const genre = (card.dataset.genre || '').toLowerCase();
+                                    const about = (card.dataset.about || '').toLowerCase();
+
+                                    const matchesGenre = activeGenre === 'all' || genre === activeGenre.toLowerCase();
+                                    const matchesSearch = !search || title.includes(search) || genre.includes(search) || about.includes(search);
+
+                                    card.style.display = (matchesGenre && matchesSearch) ? '' : 'none';
+                                });
+
+                                // Update movie count
+                                const visible = allCards.filter(c => c.style.display !== 'none').length;
+                                document.getElementById('movie-count').textContent = visible;
+                            }
+
+                            searchInput.addEventListener('input', filterCards);
+
+                            genreFiltersContainer.addEventListener('click', function (e) {
+                                if (!e.target.classList.contains('filter-chip')) return;
+                                genreFiltersContainer.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                                e.target.classList.add('active');
+                                activeGenre = e.target.dataset.genre;
+                                filterCards();
+                            });
+
+                            // ─── Drag and Drop ───
+                            let draggedCard = null;
+
+                            allCards.forEach(card => {
+                                card.addEventListener('dragstart', function (e) {
+                                    draggedCard = this;
+                                    this.classList.add('dragging');
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', this.dataset.movieId);
+                                });
+
+                                card.addEventListener('dragend', function () {
+                                    this.classList.remove('dragging');
+                                    grid.querySelectorAll('.movie-card').forEach(c => c.classList.remove('drag-over'));
+                                    draggedCard = null;
+                                    saveOrder();
+                                });
+
+                                card.addEventListener('dragover', function (e) {
+                                    e.preventDefault();
+                                    e.dataTransfer.dropEffect = 'move';
+                                    if (this !== draggedCard) {
+                                        this.classList.add('drag-over');
+                                    }
+                                });
+
+                                card.addEventListener('dragleave', function () {
+                                    this.classList.remove('drag-over');
+                                });
+
+                                card.addEventListener('drop', function (e) {
+                                    e.preventDefault();
+                                    this.classList.remove('drag-over');
+                                    if (draggedCard && this !== draggedCard) {
+                                        const cards = [...grid.querySelectorAll('.movie-card')];
+                                        const draggedIdx = cards.indexOf(draggedCard);
+                                        const droppedIdx = cards.indexOf(this);
+
+                                        if (draggedIdx < droppedIdx) {
+                                            this.parentNode.insertBefore(draggedCard, this.nextSibling);
+                                        } else {
+                                            this.parentNode.insertBefore(draggedCard, this);
+                                        }
+                                    }
+                                });
+                            });
+
+                            async function saveOrder() {
+                                const cards = grid.querySelectorAll('.movie-card');
+                                const order = [...cards].map(c => c.dataset.movieId);
+
+                                try {
+                                    await fetch('/movies/reorder', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ order })
+                                    });
+                                    showToast('success', 'Reordered!', 'Movie collection order has been updated.');
+                                } catch (err) {
+                                    showToast('error', 'Error', 'Could not save the new order.');
+                                }
+                            }
+                        });
+                    </script>
+
+                    <%- include('../partials/footer.ejs') %>

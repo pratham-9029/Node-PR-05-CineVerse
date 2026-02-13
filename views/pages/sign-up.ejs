@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CineVerse Sign Up — Create your account and start curating movies.">
+    <title>CineVerse — Sign Up</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+</head>
+
+<body>
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="form-glass">
+                <div class="auth-header">
+                    <a href="/admin" class="nav-brand">
+                        <div class="nav-brand-icon" aria-hidden="true">🎬</div>
+                        <span class="nav-brand-text">CineVerse</span>
+                    </a>
+                    <h2>Create Account</h2>
+                    <p>Join the future of cinema curation</p>
+                </div>
+
+                <form id="signup-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="signup-name">Full Name</label>
+                        <input type="text" class="form-control" id="signup-name" name="name" placeholder="John Doe"
+                            required autocomplete="name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signup-email">Email Address</label>
+                        <input type="email" class="form-control" id="signup-email" name="email"
+                            placeholder="you@cineverse.io" required autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signup-password">Password</label>
+                        <input type="password" class="form-control" id="signup-password" name="password"
+                            placeholder="Min 8 chars, upper, lower, digit, symbol" required autocomplete="new-password"
+                            minlength="8">
+                        <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.5;">
+                            Must contain: uppercase, lowercase, digit, and special character (@$!%*?&#)
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full btn-lg" id="signup-submit-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <line x1="19" y1="8" x2="19" y2="14" />
+                            <line x1="22" y1="11" x2="16" y2="11" />
+                        </svg>
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="auth-divider">or</div>
+
+                <p class="auth-footer">
+                    Already have an account? <a href="/auth/login">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+            <div class="toast-icon">${type === 'success' ? '✓' : '✕'}</div>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+        `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        document.getElementById('signup-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+
+            if (!name || !email || !password) {
+                showToast('error', 'Validation', 'Please fill in all fields.');
+                return;
+            }
+
+            const btn = document.getElementById('signup-submit-btn');
+            btn.innerHTML = '<div class="spinner"></div> Creating account...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('success', 'Account Created!', 'Redirecting to login...');
+                    setTimeout(() => window.location.href = '/auth/login', 1500);
+                } else {
+                    showToast('error', 'Registration Failed', data.message || 'Could not create account.');
+                    btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Create Account
+                `;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                showToast('error', 'Network Error', 'Could not connect to the server.');
+                btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                Create Account
+            `;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

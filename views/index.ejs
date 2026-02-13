@@ -1,0 +1,61 @@
+<%- include('./partials/header.ejs') %>
+
+    <!-- Home Hero Section -->
+    <section class="home-hero" aria-labelledby="hero-heading">
+        <div class="home-hero-glow" aria-hidden="true"></div>
+
+        <div class="page-hero-badge">Streaming Platform 2030</div>
+
+        <h1 id="hero-heading">
+            Your Ultimate<br>
+            <span class="gradient-text">Movie Vault</span>
+        </h1>
+        <p>Curate, organize, and experience your film collection like never before. A cinematic command center built for
+            the future.</p>
+
+        <div class="home-hero-actions">
+            <a href="/movies/view-movies" class="btn btn-primary btn-lg" id="hero-browse-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                </svg>
+                Browse Collection
+            </a>
+            <a href="/movies/add-movies" class="btn btn-ghost btn-lg" id="hero-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 12h8" />
+                    <path d="M12 8v8" />
+                </svg>
+                Add Movie
+            </a>
+        </div>
+    </section>
+
+    <!-- Feature Cards -->
+    <section class="features-grid" aria-label="Platform features">
+        <div class="feature-card glass-card">
+            <div class="feature-card-icon" style="background: rgba(0, 240, 255, 0.1); color: var(--neon-cyan);"
+                aria-hidden="true">📽️</div>
+            <h3>Smart Cataloging</h3>
+            <p>Organize your movies with intelligent genre tagging, custom ratings, and beautiful poster displays.</p>
+        </div>
+        <div class="feature-card glass-card">
+            <div class="feature-card-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--neon-violet);"
+                aria-hidden="true">🎯</div>
+            <h3>Drag & Drop Sorting</h3>
+            <p>Rearrange your collection effortlessly with intuitive drag-and-drop. Your order, your rules.</p>
+        </div>
+        <div class="feature-card glass-card">
+            <div class="feature-card-icon" style="background: rgba(255, 0, 110, 0.1); color: var(--neon-magenta);"
+                aria-hidden="true">⚡</div>
+            <h3>Instant Updates</h3>
+            <p>Lightning-fast AJAX operations — add, edit, or remove movies without a single page refresh.</p>
+        </div>
+    </section>
+
+    <%- include('./partials/footer.ejs') %>

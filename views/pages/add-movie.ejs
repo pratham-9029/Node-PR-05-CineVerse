@@ -1,0 +1,197 @@
+<%- include('../partials/header.ejs') %>
+
+    <!-- Page Hero -->
+    <section class="page-hero" aria-labelledby="add-heading">
+        <div class="page-hero-badge">New Entry</div>
+        <h1 id="add-heading">
+            Add a <span class="gradient-text">New Movie</span>
+        </h1>
+        <p>Expand your vault. Fill in the details below and your movie will appear instantly.</p>
+    </section>
+
+    <!-- Add Movie Form -->
+    <div class="form-wrapper">
+        <form class="form-glass" id="add-movie-form" enctype="multipart/form-data" novalidate>
+            <!-- Title -->
+            <div class="form-group">
+                <label class="form-label" for="movie-title">Movie Title</label>
+                <input type="text" class="form-control" id="movie-title" name="title"
+                    placeholder="e.g. Blade Runner 2099" required autocomplete="off">
+            </div>
+
+            <!-- Genre -->
+            <div class="form-group">
+                <label class="form-label" for="movie-genre">Genre</label>
+                <select class="form-control" id="movie-genre" name="genre" required>
+                    <option value="" disabled selected>Select a genre</option>
+                    <option value="Action">Action</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Animation">Animation</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Crime">Crime</option>
+                    <option value="Documentary">Documentary</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Horror">Horror</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Western">Western</option>
+                </select>
+            </div>
+
+            <!-- About -->
+            <div class="form-group">
+                <label class="form-label" for="movie-about">Synopsis</label>
+                <textarea class="form-control" id="movie-about" name="about"
+                    placeholder="A brief synopsis of the movie..." rows="3"></textarea>
+            </div>
+
+            <!-- Rating -->
+            <div class="form-group">
+                <label class="form-label">Rating</label>
+                <div class="star-rating-input" id="star-rating">
+                    <input type="radio" name="rating" value="5" id="star5"><label for="star5" title="5 stars">★</label>
+                    <input type="radio" name="rating" value="4" id="star4"><label for="star4" title="4 stars">★</label>
+                    <input type="radio" name="rating" value="3" id="star3" checked><label for="star3"
+                        title="3 stars">★</label>
+                    <input type="radio" name="rating" value="2" id="star2"><label for="star2" title="2 stars">★</label>
+                    <input type="radio" name="rating" value="1" id="star1"><label for="star1" title="1 star">★</label>
+                </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+                <label class="form-label">Movie Poster</label>
+                <div class="upload-zone" id="upload-zone">
+                    <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <p class="upload-zone-text"><strong>Click to upload</strong> or drag and drop<br>PNG, JPG, WEBP up
+                        to 5MB</p>
+                    <input type="file" name="image" id="movie-image" accept="image/*" required>
+                </div>
+                <div class="upload-preview" id="upload-preview">
+                    <img id="preview-img" src="" alt="Image preview">
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary btn-full btn-lg" id="add-submit-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 12h8" />
+                    <path d="M12 8v8" />
+                </svg>
+                Add to Collection
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('add-movie-form');
+            const fileInput = document.getElementById('movie-image');
+            const uploadZone = document.getElementById('upload-zone');
+            const uploadPreview = document.getElementById('upload-preview');
+            const previewImg = document.getElementById('preview-img');
+            const submitBtn = document.getElementById('add-submit-btn');
+
+            // File preview
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        previewImg.src = e.target.result;
+                        uploadPreview.classList.add('active');
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Upload zone drag events
+            ['dragenter', 'dragover'].forEach(event => {
+                uploadZone.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('drag-active');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(event => {
+                uploadZone.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('drag-active');
+                });
+            });
+
+            uploadZone.addEventListener('drop', function (e) {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // AJAX form submit
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                // Validate
+                const title = document.getElementById('movie-title').value.trim();
+                if (!title) {
+                    showToast('error', 'Validation Error', 'Please enter a movie title.');
+                    document.getElementById('movie-title').focus();
+                    return;
+                }
+
+                if (!fileInput.files || !fileInput.files[0]) {
+                    showToast('error', 'Validation Error', 'Please upload a movie poster.');
+                    return;
+                }
+
+                submitBtn.innerHTML = '<div class="spinner"></div> Adding...';
+                submitBtn.disabled = true;
+
+                const formData = new FormData(form);
+
+                try {
+                    const res = await fetch('/movies/add-movies', {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' },
+                        body: formData
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast('success', 'Movie Added!', `"${data.movie.title}" has been added to your collection.`);
+                        form.reset();
+                        uploadPreview.classList.remove('active');
+                        previewImg.src = '';
+
+                        // Redirect after brief delay
+                        setTimeout(() => {
+                            window.location.href = '/movies/view-movies';
+                        }, 1200);
+                    } else {
+                        showToast('error', 'Error', data.message || 'Failed to add movie.');
+                    }
+                } catch (err) {
+                    showToast('error', 'Network Error', 'Could not connect to the server.');
+                }
+
+                submitBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+            Add to Collection
+        `;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+
+    <%- include('../partials/footer.ejs') %>

@@ -19,5 +19,5 @@ app.listen(PORT, (err) => {
         console.log(err);
     }
     console.log(`Server started on port ${PORT}`);
-    console.log('http://127.0.0.1:' + PORT);
+    console.log('http://127.0.0.1:' + PORT + '/auth/sign-up');
 });
